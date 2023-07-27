@@ -1,0 +1,28 @@
+body
+{
+    display: flex;
+    flex-direction: column;
+    background-color: #1a1919;
+}
+
+.title
+{
+    font: 58px "Audiowide";
+    font-weight: light;
+    color: white;
+    text-align: center;
+    margin-top: 20vh;
+}
+
+.noteDiv
+{
+    display: flex;
+    flex-direction: column;
+}
+
+.wrapper
+{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
