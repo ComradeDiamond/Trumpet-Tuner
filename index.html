@@ -2,22 +2,27 @@
 <html>
     <head>
         <script src="./Script/webPage.js"></script>
+        <link rel="stylesheet" href="./animate.css" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Audiowide">
         <link rel="stylesheet" href="./index.css" />
     </head>
     <body>
-        <h1 class="title">Trumpet Tuner</h1>
-        <div class="wrapper">
-            <div class="noteDiv">
-                <div id="note">
-                    A
-                </div>
-                <div id="frequency">
-                    420 Hz
-                </div>
+        <div>
+            <h1 class="title">Trumpet Tuner</h1>
+            <div class="rec">
+                <span id="circleFlash" class="activated"></span>
+                <span id="recStatus">Recording</span>
             </div>
+        </div>
+        <div class="noteDiv">
             <div class="photo">
-
+                <img src="./Images/A4.png" />
+            </div>
+            <div id="note">
+                A
+            </div>
+            <div id="frequency">
+                420 Hz
             </div>
         </div>
     </body>
