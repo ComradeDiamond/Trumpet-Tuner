@@ -29,7 +29,7 @@ body
     align-items: center;
 }
 
-#circleFlash
+.activated
 {
     margin-right: 0.25em;
     background-color: #911212;
@@ -37,10 +37,7 @@ body
     height: 1em;
     border-radius: 50%;
     display: inline-block;
-}
 
-.activated
-{
     animation-name: flash;
     animation-duration: 1s;
     animation-iteration-count: infinite;

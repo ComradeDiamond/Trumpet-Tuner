@@ -3,82 +3,138 @@
     General Gist: Media Recorder takes a MediaDevice API to know where it's getting audio from
 */
 
-const AudioRecorder = function() {
-
+/**
+ * Class for Tuning and Audio Recording
+ */
+class AudioRecorder
+{
     /**
-     * Stores whether or not audio recorder is active
+     * Constructs an AudioRecorder instance
      */
-    this.recording = false;
-
-    /**
-     * Stores audio data. This should be an array of blobs
-     */
-    this.audioData = [];
-
-    /**
-     * The actual thing doing the data. Make sure you call this.start() so the `mediaRecorder` exists to begin with.
-     */
-    this.mediaRecorder = null;
-
-    /**
-     * Starts recording audio
-     * @returns {Promise} Resolves if audio recording has successfully started
-     */
-    this.start = function() 
+    constructor(host)
     {
-        return new Promise((resolve, reject) => {
+        /**
+         * @type {Boolean}
+         * Whether or not the AudioRecorder is recording
+         */
+        this.recording = false;
 
-            //Check if we have Audio API is even supported
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia)
-            {
-                //If mediaRecorder is on, now it doesn't do anything because microphone perms are revoked
-                this.mediaRecorder = null;
+        /**
+         * @type {Blob[]}
+         * Data output from AudioRecorder
+         */
+        this.audioData = [];
 
-                reject(new OverconstrainedError("No Audio API detected"));
-                return; //Don't think we need a return here
-            }
+        /**
+         * @type {MediaRecorder}
+         * The actual microphone recording
+         */
+        this.mediaRecorder = null;
 
-            navigator.mediaDevices.getUserMedia({audio: true, video: false})
-                .then(stream => {
-                    this.recording = true;
-                    
-                    //Every set interval, we want new data to be processed in the FFT
-                    this.audioData = [];
-
-                    if (!this.mediaRecorder)
-                    {
-                        this.mediaRecorder = new MediaRecorder(stream);
-
-                        this.mediaRecorder.ondataavailable(e => {
-                            this.audioData.push(e.data);
-                        });
-                    }
-
-                    //Start recording!
-                    this.mediaRecorder.start();
-                });
-            });
-    }
-
-    /**
-     * Stops recording audio
-     * @returns {Promise} Resolves an audio blob
-     */
-    this.stop = function() {
-        return new Promise((resolve, reject) => {
-
-        })
-    };
-
-    /**
-     * Just completely cancels process of creating audio
-     * @returns {Promise}
-     */
-    this.cancel = function() {
-        return new Promise((resolve, reject) => {
-
+        this.dataAvailable = new CustomEvent("dataAvailable", {
+            data: this.audioData
         });
     }
-};
 
-export default AudioRecorder;
+    /**
+     * Initializes the AudioRecorder and performs permission checks.
+     * @returns {Promise} Resolves if audio recording has successfully started. Rejects with error message if an error occurs
+     */
+    initialize()
+    {
+        return new Promise((resolve, reject) => {
+            if (this.mediaRecorder != null) return;
+
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia)
+            {
+                reject(new Error("No Audio API Detected"));
+            }
+
+            //Fetches media stream, and then uses it to create mediaRecorder
+            let mediaDevicesPromise = navigator.mediaDevices.getUserMedia({audio: true, video: false});
+            
+            mediaDevicesPromise.then(stream => {
+                this.mediaRecorder = new MediaRecorder(stream);
+                resolve();
+            });
+
+            mediaDevicesPromise.catch(err => {
+                if (err.message.indexOf("mediaDevices API or getUserMedia method is not supported in this browser.") != -1) 
+                {       
+                    reject("Audio Recording is not supported on this browser");
+                }
+
+                switch(err.name)
+                {
+                    case 'AbortError': //error from navigator.mediaDevices.getUserMedia
+                        reject("An OS AbortError has occured.");
+                        break;
+                    case 'NotAllowedError': //error from navigator.mediaDevices.getUserMedia
+                        reject("Please enable Microphone permissions.");
+                        break;
+                    case 'NotFoundError': //error from navigator.mediaDevices.getUserMedia
+                        reject("No recording device found.");
+                        break;
+                    case 'NotReadableError': //error from navigator.mediaDevices.getUserMedia
+                        reject("A Hardware error has occured.");
+                        break;
+                    case 'SecurityError': //error from navigator.mediaDevices.getUserMedia or from the MediaRecorder.start
+                        reject("A SecurityError has occured.");
+                        break;
+                    case 'TypeError': //error from navigator.mediaDevices.getUserMedia
+                        reject("Security Settings are blocking Audio Recording");
+                        break;
+                    default:
+                        reject(`An ${err.name} has occured.`);
+                }
+            });
+        });
+    }
+
+    /**
+     * Starts the AudioRecorder.
+     * When audio data is available, dispatches the `dataAvailable` event. This should happen approximately every once in 250 seconds
+     * @returns 
+     */
+    start()
+    {
+        if (this.mediaRecorder == null)
+        {
+            console.error("Initialize the AudioRecorder first.");
+        }
+        else
+        {
+            this.recording = true;
+            this.mediaRecorder.ondataavailable = (e => {
+                this.audioData.push(e);
+                this.onDataAvailable(this.audioData);
+            });
+
+            this.mediaRecorder.start(2000);
+        }
+    }
+
+    /**
+     * Stops the AudioRecorder. If nothing is recording right now, this does nothing.
+     */
+    stop()
+    {
+        if (!this.recording) return;
+
+        this.mediaRecorder.ondataavailable = () => {};
+        this.mediaRecorder.stop();
+        this,this.recording = false;
+    }
+
+    /**
+     * Event function that is called every time there is Audio Data available.
+     * There will be an argument that gets passed in which contains `this.audioData`.
+     * @example ```
+     * AudioRecorder.prototype.onDataAvailable = (audioData) => { doSomething(audioData) }
+     * ```
+     */
+    onDataAvailable()
+    {
+
+    }
+}

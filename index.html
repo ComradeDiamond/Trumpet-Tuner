@@ -1,18 +1,18 @@
 <!DOCTYPE HTML>
 <html>
     <head>
-        <script src="./Script/webPage.js"></script>
         <script src="./Script/audioRec.js"></script>
+        <script src="./Script/webPage.js"></script>
         <link rel="stylesheet" href="./animate.css" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Audiowide">
         <link rel="stylesheet" href="./index.css" />
     </head>
-    <body>
+    <body onload="initialize()">
         <div>
             <h1 class="title">Trumpet Tuner</h1>
             <div class="rec">
-                <span id="circleFlash" class="activated"></span>
-                <span id="recStatus">Recording</span>
+                <span id="circleFlash"></span>
+                <span id="recStatus"></span>
             </div>
         </div>
         <div class="noteDiv">
