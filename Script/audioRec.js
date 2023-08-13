@@ -20,20 +20,17 @@ class AudioRecorder
         this.recording = false;
 
         /**
-         * @type {Blob[]}
-         * Data output from AudioRecorder
-         */
-        this.audioData = [];
-
-        /**
          * @type {MediaRecorder}
          * The actual microphone recording
          */
         this.mediaRecorder = null;
 
-        this.dataAvailable = new CustomEvent("dataAvailable", {
-            data: this.audioData
-        });
+        /**
+         * @type {AudioContext}
+         * Just an instance of AudioContext we can use later to decode things.
+         * It's here so we don't have to constantly re-construct this
+         */
+        this.audioContext = new AudioContext();
     }
 
     /**
@@ -94,7 +91,6 @@ class AudioRecorder
     /**
      * Starts the AudioRecorder.
      * When audio data is available, dispatches the `dataAvailable` event. This should happen approximately every once in 250 seconds
-     * @returns 
      */
     start()
     {
@@ -105,13 +101,54 @@ class AudioRecorder
         else
         {
             this.recording = true;
-            this.mediaRecorder.ondataavailable = (e => {
-                this.audioData.push(e);
-                this.onDataAvailable(this.audioData);
+            this.mediaRecorder.ondataavailable = (async e => {
+                let blobBuffer = await e.data.arrayBuffer();
+                let amplitudeArr = await this.#processAudioData(blobBuffer);
+                this.onDataAvailable(await amplitudeArr)
             });
 
-            this.mediaRecorder.start(2000);
+            this.mediaRecorder.start(1000);
         }
+    }
+
+    /**
+     * Private method. Given an audio blob, return an Array of its "amplitudes" as a mono channel.
+     * @param {ArrayBuffer[]} blobBuffer An array buffer, created from each audio blob 
+     * @return {Array[]} An array consisting of the blob "amplitudes"
+     */
+    async #processAudioData(blobBuffer)
+    {
+        const stereoBuffer = await this.audioContext.decodeAudioData(blobBuffer)
+        this.#collapseToMono(stereoBuffer);
+
+        return stereoBuffer.getChannelData(0);
+    }
+
+    /**
+     * Takes an audioBuffer (created by decoding blobBuffer data) and ensures that it collapses to a mono channel so we can FFT it later.
+     * @param {AudioBuffer} audioBuffer Stereo Buffer (probably)
+     * @after To save time/space, this overwrites the 1st channel of the given audioBuffer with the mono channel data.
+     */
+    #collapseToMono(audioBuffer)
+    {
+        const numChannels = audioBuffer.numberOfChannels;
+        const numSamples = audioBuffer.length;
+
+        //The way to convert stereo --> mono is to average (in music terms, mix) the sound waves from both channels
+        const averageAmplitude = new Float32Array();    //copyToChannel() uses Float32
+
+        for (let sample = 0; sample < numSamples; sample++)
+        {
+            var sum = 0;
+
+            for (var channel = 0; channel < numChannels; channel++)
+            {
+                sum += audioBuffer.getChannelData(channel)[sample];
+            }
+        }
+        averageAmplitude.push(sum / numChannels);
+
+        audioBuffer.copyToChannel(averageAmplitude, 0);
     }
 
     /**
@@ -128,7 +165,8 @@ class AudioRecorder
 
     /**
      * Event function that is called every time there is Audio Data available.
-     * There will be an argument that gets passed in which contains `this.audioData`.
+     * The `audioData` will be an array of sound amplitudes recorded during the data duration
+     * There will be an argument that gets passed in which contains the decoded audio data (monochannel)
      * @example ```
      * AudioRecorder.prototype.onDataAvailable = (audioData) => { doSomething(audioData) }
      * ```
