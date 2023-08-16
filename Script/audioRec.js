@@ -31,6 +31,12 @@ class AudioRecorder
          * It's here so we don't have to constantly re-construct this
          */
         this.audioContext = new AudioContext();
+
+        /**
+         * @type {Number}
+         * How often the AudioRecorder should output data. This is in milliseconds.
+         */
+        this.recordingInterval = 1000;
     }
 
     /**
@@ -63,22 +69,22 @@ class AudioRecorder
 
                 switch(err.name)
                 {
-                    case 'AbortError': //error from navigator.mediaDevices.getUserMedia
+                    case 'AbortError': 
                         reject("An OS AbortError has occured.");
                         break;
-                    case 'NotAllowedError': //error from navigator.mediaDevices.getUserMedia
+                    case 'NotAllowedError':
                         reject("Please enable Microphone permissions.");
                         break;
-                    case 'NotFoundError': //error from navigator.mediaDevices.getUserMedia
+                    case 'NotFoundError':
                         reject("No recording device found.");
                         break;
-                    case 'NotReadableError': //error from navigator.mediaDevices.getUserMedia
+                    case 'NotReadableError':
                         reject("A Hardware error has occured.");
                         break;
-                    case 'SecurityError': //error from navigator.mediaDevices.getUserMedia or from the MediaRecorder.start
+                    case 'SecurityError': 
                         reject("A SecurityError has occured.");
                         break;
-                    case 'TypeError': //error from navigator.mediaDevices.getUserMedia
+                    case 'TypeError': 
                         reject("Security Settings are blocking Audio Recording");
                         break;
                     default:
@@ -104,10 +110,10 @@ class AudioRecorder
             this.mediaRecorder.ondataavailable = (async e => {
                 let blobBuffer = await e.data.arrayBuffer();
                 let amplitudeArr = await this.#processAudioData(blobBuffer);
-                this.onDataAvailable(await amplitudeArr)
+                this.onDataAvailable(amplitudeArr);
             });
 
-            this.mediaRecorder.start(1000);
+            this.mediaRecorder.start(this.recordingInterval);
         }
     }
 
@@ -118,7 +124,7 @@ class AudioRecorder
      */
     async #processAudioData(blobBuffer)
     {
-        const stereoBuffer = await this.audioContext.decodeAudioData(blobBuffer)
+        const stereoBuffer = await this.audioContext.decodeAudioData(blobBuffer);
         this.#collapseToMono(stereoBuffer);
 
         return stereoBuffer.getChannelData(0);
@@ -145,8 +151,10 @@ class AudioRecorder
             {
                 sum += audioBuffer.getChannelData(channel)[sample];
             }
+
+            //Float32Array.prototype.push() doesn't exist
+            averageAmplitude[sample] = sum / numChannels;
         }
-        averageAmplitude.push(sum / numChannels);
 
         audioBuffer.copyToChannel(averageAmplitude, 0);
     }
@@ -160,7 +168,7 @@ class AudioRecorder
 
         this.mediaRecorder.ondataavailable = () => {};
         this.mediaRecorder.stop();
-        this,this.recording = false;
+        this.recording = false;
     }
 
     /**
