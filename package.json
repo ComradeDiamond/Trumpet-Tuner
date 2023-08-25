@@ -1,0 +1,23 @@
+{
+  "name": "trumpet-tuner",
+  "version": "1.0.0",
+  "description": "Web App to tune my Trumpet",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ComradeDiamond/Trumpet-Tuner.git"
+  },
+  "keywords": [
+    "Trumpet",
+    "Tuner"
+  ],
+  "author": "Justin",
+  "license": "Unlicense",
+  "bugs": {
+    "url": "https://github.com/ComradeDiamond/Trumpet-Tuner/issues"
+  },
+  "homepage": "https://github.com/ComradeDiamond/Trumpet-Tuner#readme"
+}

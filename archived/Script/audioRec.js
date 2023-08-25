@@ -109,7 +109,8 @@ class AudioRecorder
             this.recording = true;
             this.mediaRecorder.ondataavailable = (async e => {
                 let blobBuffer = await e.data.arrayBuffer();
-                let amplitudeArr = await this.#processAudioData(blobBuffer);
+
+                let amplitudeArr = await this.#processAudioData(blobBuffer);                //Error is thrown here
                 this.onDataAvailable(amplitudeArr);
             });
 
@@ -124,7 +125,7 @@ class AudioRecorder
      */
     async #processAudioData(blobBuffer)
     {
-        const stereoBuffer = await this.audioContext.decodeAudioData(blobBuffer);
+        const stereoBuffer = await this.audioContext.decodeAudioData(blobBuffer);  //Error is thrown in this line
         this.#collapseToMono(stereoBuffer);
 
         return stereoBuffer.getChannelData(0);

@@ -1,8 +1,16 @@
 <!DOCTYPE HTML>
 <html>
     <head>
-        <script src="./Script/audioRec.js"></script>
-        <script src="./Script/webPage.js"></script>
+        <!--Including all the opus-recorder lib. Can't use import because we run into CORS issues and I want this hosted on Github pages-->
+        <!-- <script src="./opus-recorder lib/decoderWorker.min.js"></script>
+        <script src="./opus-recorder lib/decoderWorker.min.wasm"></script>
+        <script src="./opus-recorder lib/encoderWorker.min.js"></script> -->
+        <script src="./opus-recorder lib/recorder.min.js"></script>
+        <!-- <script src="./opus-recorder lib/waveWorker.min.js"></script> -->
+
+        <script src="./Script/WAVAudioRecorder.js"></script>
+        <!-- <script src="./Script/audioRec.js"></script> -->
+        <!-- <script src="./Script/webPage.js"></script> -->
         <link rel="stylesheet" href="./animate.css" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Audiowide">
         <link rel="stylesheet" href="./index.css" />
